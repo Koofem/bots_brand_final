@@ -1,0 +1,5 @@
+{
+ "createSessions" : "https://braidsandhairmedia.ru/payment/create-session",
+ "createPayment" : "https://braidsandhairmedia.ru/payment/create-payment-link",
+ "productPay": "https://braidsandhairmedia.ru/payment/pay?token="
+}

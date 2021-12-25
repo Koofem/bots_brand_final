@@ -1,0 +1,5 @@
+{
+  "MONGO_DB_PASS": "78Platina",
+  "MONGO_DB_BASE": "sand-hair-media",
+  "MONGO_DB_CLIENT": "users"
+}
