@@ -8,7 +8,6 @@ const MarathonBot = new (class MarathonBot {
 	async init({jwtToken, telegramBotToken, authHandler, keyBoardExpander, authActions}) {
 
 		const commands = keyBoardExpander(keyboardsCommands)
-		// console.log(commands)
 		await marathonClass.init({jwtToken});
 		await messageHandler.init({authHandler, commands, authActions})
 		await telegramBot.init({token:telegramBotToken, commands, authActions});

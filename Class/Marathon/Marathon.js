@@ -32,10 +32,6 @@ const marathonClass = new (class Marathon{
 		const { data } =await axios.get(marathonModules.MARATHON_FIND_ALL, { headers: {"Authorization" : `${this.token}`} });
 		return data
 	}
-	//
-	// async getInvoce({ctx, currentMarathon}) {
-	// 		return this.paymentHandler.sendMarathonInvoice({ctx, product: currentMarathon});
-	// }
 
 	async getCurrentMarathon() {
 		const marathons = await this._getAllMarathons();

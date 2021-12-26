@@ -1,5 +1,6 @@
 const UserBD = require("Models/UsersBD");
 const MarathonClass = require('Class/Marathon/Marathon')
+const MasterClassClass = require('Class/MasterClass/MasterClass')
 
 const AuthHandlerClass = new (class AuthHandler {
 	// marathonCB
@@ -88,8 +89,10 @@ const AuthHandlerClass = new (class AuthHandler {
 		} else {
 			const product = ctx.update.callback_query.data.split('_');
 			if (product[0] === 'accept-marathon') {
-				// return AuthHandlerClass.marathonCB(product[1], ctx);
 				return MarathonClass.getPaymentLink(ctx, product[1], user);
+			}
+			if (product[0]=== 'accept-master-class') {
+				return MasterClassClass.getPaymentLink(ctx, product[1], user);
 			}
 		}
 	}
@@ -249,6 +252,12 @@ const AuthHandlerClass = new (class AuthHandler {
 			},
 			{
 				trigger: /(^accept-marathon+.+$)/i,
+				set_action: this.checkRequiredFields,
+				message: 'Нужно заполнить обязательные поля, чтобы продолжить!',
+				isVisible: false
+			},
+			{
+				trigger: /(^accept-master-class+.+$)/i,
 				set_action: this.checkRequiredFields,
 				message: 'Нужно заполнить обязательные поля, чтобы продолжить!',
 				isVisible: false
