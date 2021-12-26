@@ -16,6 +16,12 @@ class PaymentBD {
 		})
 	}
 
+	async deletePayment(id) {
+		return await this.paymentBD.deleteOne({
+			_id: id
+		})
+	}
+
 	async updatePayment(id, messageID) {
 		return await this.paymentBD.findOneAndUpdate({_id: id}, {
 			$set: {

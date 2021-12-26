@@ -62,8 +62,8 @@ const marathonClass = new (class Marathon{
 	}
 
 	async getPaymentLink(ctx, currentMarathon, user) {
+		const loadingMessage = await ctx.telegram.sendMessage(ctx.from.id, 'Загрузка, пожалуйста подождите');
 		try {
-			await ctx.telegram.sendMessage(ctx.from.id, 'Загрузка, пожалуйста подождите');
 			const marathonById = await marathonClass.getMarathonById(currentMarathon);
 			const {marathonURL} = await readFile('Constants/successURL.json')
 			const {productPay} = await readFile('Constants/modules.json')
@@ -95,10 +95,11 @@ const marathonClass = new (class Marathon{
 			})
 
 			await PaymentBD.updatePayment(data.token, message.message_id)
+			await ctx.telegram.deleteMessage(ctx.from.id, loadingMessage.message_id)
 			return message
 		} catch (e) {
-			console.log(e)
-			return ctx.telegram.sendMessage(ctx.from.id, 'Что-то пошло не так, попробуйте позже!')
+			await ctx.telegram.deleteMessage(ctx.from.id, loadingMessage.message_id)
+			return ctx.telegram.sendMessage(ctx.from.id, 'Возможно Вы уже оплатили участие в данном марафоне, или что-то пошло не так')
 		}
 	}
 

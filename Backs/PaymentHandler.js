@@ -1,6 +1,5 @@
 const axios = require('Backs/AxiosHandler');
 const rabbit =  require('amqplib/callback_api');
-const {marathonPaymentProcessing} = require('Class/Marathon/Marathon');
 
 const md5 = require('md5');
 const PaymentBD = require("Models/PaymentBD");
@@ -17,11 +16,18 @@ const PaymentHandlerClass = new (class PaymentHandler {
 					throw channelError
 				}
 
-				const QUEUE = 'receivingPayments';
-				channel.assertQueue(QUEUE, {
+				const PaymentQUEUE = 'receivingPayments';
+				const deletePaymentQUEUE = 'deletePayment';
+				channel.assertQueue(PaymentQUEUE, {
 					durable: false
 				})
-				channel.consume(QUEUE, PaymentHandlerClass.paymentProcessing, {
+				channel.assertQueue(deletePaymentQUEUE, {
+					durable: false
+				});
+				channel.consume(deletePaymentQUEUE, PaymentHandlerClass.paymentDeleting, {
+					noAck: true
+				})
+				channel.consume(PaymentQUEUE, PaymentHandlerClass.paymentProcessing, {
 					noAck: true
 				})
 			})
@@ -30,10 +36,25 @@ const PaymentHandlerClass = new (class PaymentHandler {
 
 	paymentProcessing(msg) {
 		const payment = JSON.parse(msg.content.toString());
-		console.log(payment)
 		if (payment.type === 'marathon') {
 			return PaymentHandlerClass.marathonPaymentProcessing(payment.id)
 		}
+	}
+
+	async paymentDeleting(msg) {
+		const payment = JSON.parse(msg.content.toString());
+		if (payment.type === 'marathon') {
+			return PaymentHandlerClass.marathonPaymentDelete(payment.id)
+		}
+	}
+
+	async marathonPaymentDelete(paymentID) {
+		const payment = await PaymentBD.findPayment(paymentID)
+		const user = await UsersBD.findUser(Number(payment.userID));
+		const messageID = payment.messageID;
+		const message = 'Мы отменили транзакцию, если у Вас есть вопросы - напишите нашему менеджеру'
+		await PaymentBD.deletePayment(paymentID)
+		return marathonBot.telegram.editMessageText(user.id , messageID, undefined, message);
 	}
 
 	async marathonPaymentProcessing(paymentID) {
@@ -43,6 +64,7 @@ const PaymentHandlerClass = new (class PaymentHandler {
 		console.log('user', user);
 		const messageID = payment.messageID;
 		const message = 'Оплата прошла! Скоро наш менеджер с Вами свяжется.'
+		// Добавить отправку в чат
 		return marathonBot.telegram.editMessageText(user.id , messageID, undefined, message);
 	}
 
