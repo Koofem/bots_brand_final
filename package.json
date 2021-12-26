@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "link-module-alias",
     "ci": "npm ci",
-    "start": "npm run postinstall && nodemon index.js"
+    "start": "npm run postinstall && node index.js"
   },
   "_moduleAliases": {
     "Models": "./Models",
