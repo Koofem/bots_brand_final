@@ -1,9 +1,10 @@
 const marathonModules = require('Constants/MarathonModules');
 const PaymentHandler = require("Backs/PaymentHandler")
+const PaymentBD = require('Models/PaymentBD');
+const UsersBD = require('Models/UsersBD');
 const axios = require('axios');
 const marathonClass = new (class Marathon{
 	token
-	// paymentHandler
 	constructor() {}
 
 		async marathonCheck(currentMarathon, ctx) {
@@ -71,7 +72,7 @@ const marathonClass = new (class Marathon{
 				successURL: marathonURL,
 				targets: marathonById.name,
 				comment: `Оплата марафона ${marathonById.name}`,
-				userID: user._id,
+				userID: `${user.id}`,
 				productID: marathonById._id,
 				type: 'marathon'
 			}
@@ -82,7 +83,7 @@ const marathonClass = new (class Marathon{
 
 		const { data } = await PaymentHandler.createPaymentLink(payload)
 		const text = 'Отлично, нажмите кнопку "Оплатить"'
-		return ctx.telegram.sendMessage(ctx.from.id, text, {
+		const message = await ctx.telegram.sendMessage(ctx.from.id, text, {
 				reply_markup: {
 					inline_keyboard: [[
 						{
@@ -92,6 +93,9 @@ const marathonClass = new (class Marathon{
 					]]
 				}
 			})
+
+			await PaymentBD.updatePayment(data.token, message.message_id)
+			return message
 		} catch (e) {
 			console.log(e)
 			return ctx.telegram.sendMessage(ctx.from.id, 'Что-то пошло не так, попробуйте позже!')
@@ -103,5 +107,4 @@ const marathonClass = new (class Marathon{
 	}
 
 })()
-
 module.exports = marathonClass;

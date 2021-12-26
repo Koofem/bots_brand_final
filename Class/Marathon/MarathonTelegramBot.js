@@ -9,6 +9,7 @@ class MarathonTelegramBot {
 	async init({token, commands, authActions}) {
 		this.bot = new Telegraf(token);
 		await this.startListening(commands, authActions);
+		global.marathonBot = this.bot
 	}
 
 	startListening(commands, authActions) {

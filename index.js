@@ -2,10 +2,12 @@ require('dotenv').config()
 
 const MongoBD = require("Models/MongoBD");
 const UserBD = require("Models/UsersBD");
+const PaymentBD = require("Models/PaymentBD")
 // Модули авторизации и сбора данных
 // const MelAuth = require('AuthModule/index.js');
 const AuthHandler = require('Backs/AuthHandler');
 const MarathonBot = require('Class/Marathon/index')
+const PaymentHandler = require("Backs/PaymentHandler")
 
 // // Модули бота марафонов
 // const MarathonController = require('MarathonBotModule/Controllers/AcceptMarathon.js')
@@ -26,6 +28,7 @@ const App = new (class App {
 	async init() {
 		await MongoBD.init();
 		await UserBD.init();
+		await PaymentBD.init();
 		await AuthHandler.init()
 		await keyboardsExpander.init(AuthHandler);
 		checkAuth().then(async ()=> {
@@ -52,6 +55,8 @@ const App = new (class App {
 				keyBoardExpander: keyboardsExpander.expand,
 				authActions: AuthHandler.actions,
 			})
+
+			PaymentHandler.init();
 
 		})
 	}
