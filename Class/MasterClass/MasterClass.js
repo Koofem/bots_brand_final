@@ -44,6 +44,7 @@ const masterClassClass = new (class MasterClass{
 			}
 			const isMasterClassEnable = await masterClassClass.masterClassCheck(masterClassById, ctx)
 			if (!isMasterClassEnable) {
+				await ctx.telegram.deleteMessage(ctx.from.id, loadingMessage.message_id)
 				return
 			}
 

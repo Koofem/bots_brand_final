@@ -20,7 +20,6 @@ const readFile = require('Helpers/ReadFile.js');
 global.readFile = readFile;
 
 const App = new (class App {
-	constructor() {}
 	async init() {
 		await MongoBD.init();
 		await UserBD.init();
