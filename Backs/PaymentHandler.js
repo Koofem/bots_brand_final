@@ -55,14 +55,14 @@ const PaymentHandlerClass = new (class PaymentHandler {
 	}
 
 	async sendMessageToChannel(payment, user, type = '') {
-		const { channelID } = await readFile('config/telegram_bots.json');
+		const { marathonChannelID, masterClassChannelID } = await readFile('config/telegram_bots.json');
 		const message = `Произошла новая оплата:\nПродукт:\nНазвание: <b><i>${payment.targets}</i></b>\nЦена: <b><i>${payment.sum}₽</i></b>\n\nКлиент:\nИмя: <b><i>${user.first_name || ''}</i></b>\nФамилия: <b><i>${user.last_name || ''}</i></b>\nОтчество: <b><i>${user.patronymic || ''}</i></b>\nТелефон: <b><i>${user.phone || ''}</i></b>\nEmail: <b><i>${user.email || ""}</i></b>\nInstagram: <b><i>${user.instagram || ''}</i></b>`
 		if (type === 'masterClass') {
-			return masterClassBot.telegram.sendMessage(channelID, message, {
+			return masterClassBot.telegram.sendMessage(masterClassChannelID, message, {
 				parse_mode: 'HTML'
 			})
 		} else if (type === 'marathon') {
-			return marathonBot.telegram.sendMessage(channelID, message, {
+			return marathonBot.telegram.sendMessage(marathonChannelID, message, {
 				parse_mode: 'HTML'
 			})
 		}
