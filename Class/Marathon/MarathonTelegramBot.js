@@ -16,6 +16,7 @@ class MarathonTelegramBot {
 		commands.forEach((command)=> {
 			this.bot.hears(command.trigger, (ctx)=> command.action(ctx));
 		})
+		this.bot.hears('Обновить', (ctx)=> messageHandler.restartAndStartCommandHandler(ctx));
 
 		authActions.forEach((action)=> {
 			this.bot.action(action.trigger, (ctx)=> action.set_action(ctx, action.trigger));
