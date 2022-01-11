@@ -74,11 +74,23 @@ const AuthHandlerClass = new (class AuthHandler {
 			return await AuthHandlerClass.editMessage(ctx, ctx.chat.id, messageID, `Отчество изменено на <strong>${patronymic}</strong>`)
 	}
 
-	checkRequiredFields= async function(ctx) {
+	_checkRequire = async function(user) {
+		const requireFields = ['first_name','last_name', 'phone', 'instagram'];
+		const userFields = Object.keys(user)
+		let emptyRequire = [];
+		requireFields.forEach((field)=> {
+			if ( !~userFields.indexOf(field) ) emptyRequire.push(field)
+		})
+
+		return emptyRequire
+	}
+
+	checkRequiredFields = async function(ctx) {
 		ctx.answerCbQuery();
-		const user = await UserBD.findUser(ctx.chat.id)
-		if (!user.first_name || !user.instagram) {
-			const keyboard = AuthHandlerClass.getRequerdInlineKeyboards(user.first_name, user.instagram);
+		const user = await UserBD.findUser(ctx.chat.id);
+		const emptyRequire = await AuthHandlerClass._checkRequire(user)
+		if (emptyRequire.length > 0) {
+			const keyboard = AuthHandlerClass.getRequerdInlineKeyboards(emptyRequire);
 			await ctx.telegram.sendMessage(ctx.chat.id, 'Нужно заполнить обязательные поля.',{
 				reply_markup: {
 					inline_keyboard: keyboard,
@@ -124,9 +136,9 @@ const AuthHandlerClass = new (class AuthHandler {
 		const phone = ctx.message.text
 		const regexp = new RegExp('^(\\+7|7|8)?[\\s\\-]?\\(?[489][0-9]{2}\\)?[\\s\\-]?[0-9]{3}[\\s\\-]?[0-9]{2}[\\s\\-]?[0-9]{2}$')
 		if (regexp.test(phone)) {
-			await UserBD.updateUser(ctx.chat, 'phone', phone.length === 10 ? '+7'+phone : phone );
+			await UserBD.updateUser(ctx.chat, 'phone', phone.length === 10 ? '+7'+ phone.replace(/\s+/g, '') : phone.replace(/\s+/g, ''));
 			await UserBD.resetUserAction(ctx.chat)
-			return await AuthHandlerClass.editMessage(ctx, ctx.chat.id, messageID, `Телефон изменен на <strong>${phone}</strong>`)
+			return await AuthHandlerClass.editMessage(ctx, ctx.chat.id, messageID, `Телефон изменен на <strong>${phone.replace(/\s+/g, '')}</strong>`)
 		} else {
 			await AuthHandlerClass.deleteMessage(ctx, ctx.chat.id, messageID)
 			const message = await ctx.telegram.sendMessage(ctx.chat.id, 'Вы ввели неккоректный номер телефона, попробуйте снова!', {
@@ -151,7 +163,7 @@ const AuthHandlerClass = new (class AuthHandler {
 			return await AuthHandlerClass.editMessage(ctx, ctx.chat.id, messageID, `Instagram изменен <strong>${instagram}</strong>`)
 		} else {
 				await AuthHandlerClass.deleteMessage(ctx, ctx.chat.id, messageID)
-			const message = await ctx.telegram.sendMessage(ctx.chat.id, 'Вы ввели неккоректный ник инстаграмма, попробуйте снова!', {
+			const message = await ctx.telegram.sendMessage(ctx.chat.id, `Вы ввели неккоректный ник инстаграмма, нужно указывать с '@' в начале ника, попробуйте снова!`, {
 				reply_markup: {
 					inline_keyboard: AuthHandlerClass.getResetInlineKeyboards(),
 					resize_keyboard: true,
@@ -201,30 +213,18 @@ const AuthHandlerClass = new (class AuthHandler {
 		return inline_keyboard
 	}
 
-	 getRequerdInlineKeyboards = function(first_name, instagram) {
+	 getRequerdInlineKeyboards = function(emptyRequire) {
 		const inline_keyboard = [];
-		if (!first_name && instagram) {
-			this.actions.filter((keyboard) => keyboard.isVisible && keyboard.isRequired && keyboard.trigger === 'edit_first_name').forEach((keyboard)=> {
-				inline_keyboard.push([{
-					text: keyboard.name,
-					callback_data: keyboard.trigger
-				}])
+			this.actions.filter((keyboard) => keyboard.isVisible && keyboard.isRequired ).forEach((keyboard)=> {
+				if (emptyRequire.some((e) => {
+					return Object.values(keyboard).includes(e)
+				})) {
+					inline_keyboard.push([{
+						text: keyboard.name,
+						callback_data: keyboard.trigger
+					}])
+				}
 			})
-		} else if (!instagram && first_name) {
-			this.actions.filter((keyboard) => keyboard.isVisible && keyboard.isRequired && keyboard.trigger === 'edit_instagram').forEach((keyboard)=> {
-				inline_keyboard.push([{
-					text: keyboard.name,
-					callback_data: keyboard.trigger
-				}])
-			})
-		} else {
-			this.actions.filter((keyboard) => keyboard.isVisible && keyboard.isRequired).forEach((keyboard)=> {
-				inline_keyboard.push([{
-					text: keyboard.name,
-					callback_data: keyboard.trigger
-				}])
-			})
-		}
 		return inline_keyboard
 	}
 
@@ -244,6 +244,7 @@ const AuthHandlerClass = new (class AuthHandler {
 			{
 				trigger: 'edit_first_name',
 				isRequired: true,
+				dataBaseName: 'first_name',
 				set_action: this.setActionToUser,
 				action: this.editFirstName,
 				name: 'Изменить имя',
@@ -265,6 +266,8 @@ const AuthHandlerClass = new (class AuthHandler {
 			{
 				trigger: 'edit_last_name',
 				set_action: this.setActionToUser,
+				isRequired: true,
+				dataBaseName: 'last_name',
 				name: 'Изменить фамилию',
 				message: 'Напишите Вашу фамилию следующим сообщением!',
 				action: this.editLastName,
@@ -282,6 +285,8 @@ const AuthHandlerClass = new (class AuthHandler {
 			{
 				trigger: 'edit_phone',
 				set_action: this.setActionToUser,
+				isRequired: true,
+				dataBaseName: 'phone',
 				action: this.editPhone,
 				name: 'Изменить телефон',
 				message: 'Напишите Ваш телефон следующим сообщением!',
@@ -298,6 +303,7 @@ const AuthHandlerClass = new (class AuthHandler {
 			{
 				trigger: 'edit_instagram',
 				isRequired: true,
+				dataBaseName: 'instagram',
 				set_action: this.setActionToUser,
 				action: this.editInstagram,
 				name: 'Изменить instagram',
